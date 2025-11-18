@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokemon Card Collection Manager</title>
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5568d3;
+            --secondary: #764ba2;
+            --bg-main: #ffffff;
+            --bg-alt: #f8f9fa;
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --text-primary: #333;
+            --text-secondary: #666;
+            --text-tertiary: #999;
+            --border: #e0e0e0;
+            --card-bg: #ffffff;
+            --card-hover: rgba(0,0,0,0.1);
+            --success: #4caf50;
+            --success-bg: #f1f8f4;
+            --error: #f44336;
+            --shadow: rgba(0,0,0,0.2);
+        }
+
+        [data-theme="dark"] {
+            --primary: #7c8aff;
+            --primary-dark: #6b7aee;
+            --secondary: #9d6bc9;
+            --bg-main: #1a1a2e;
+            --bg-alt: #16213e;
+            --bg-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            --text-primary: #e0e0e0;
+            --text-secondary: #b0b0b0;
+            --text-tertiary: #808080;
+            --border: #2d2d44;
+            --card-bg: #252541;
+            --card-hover: rgba(255,255,255,0.05);
+            --success: #66bb6a;
+            --success-bg: #1e3a1f;
+            --error: #ef5350;
+            --shadow: rgba(0,0,0,0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            padding: 20px;
+            transition: background 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--bg-main);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px var(--shadow);
+            transition: background 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+                border-radius: 10px;
+            }
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid var(--primary);
+            position: relative;
+        }
+
+        @media (max-width: 768px) {
+            header {
+                margin-bottom: 20px;
+                padding-bottom: 15px;
+            }
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            transition: color 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+
+        header p {
+            color: var(--text-secondary);
+            transition: color 0.3s ease;
+        }
+
+        /* Dark Mode Toggle */
+        .theme-toggle {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .theme-toggle:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .theme-toggle {
+                position: static;
+                margin: 10px auto;
+                padding: 8px 16px;
+                font-size: 12px;
+            }
+        }
+
+        /* Search Bar */
+        .search-container {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px 20px;
+            border: 2px solid var(--border);
+            border-radius: 25px;
+            font-size: 16px;
+            background: var(--card-bg);
+            color: var(--text-primary);
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-clear {
+            padding: 12px 24px;
+            background: var(--error);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .search-clear:hover {
+            background: #d32f2f;
+        }
+
+        @media (max-width: 768px) {
+            .search-container {
+                flex-direction: column;
+            }
+            
+            .search-input {
+                width: 100%;
+            }
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--border);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        @media (max-width: 768px) {
+            .tabs {
+                gap: 5px;
+                margin-bottom: 20px;
+            }
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            color: var(--text-secondary);
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 768px) {
+            .tab {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+        }
+
+        .tab:hover {
+            color: var(--primary);
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            font-weight: bold;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ERA GROUPING STYLES */
+        .era-section {
+            margin-bottom: 25px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            background: var(--bg-alt);
+            transition: all 0.3s ease;
+        }
+
+        .era-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: var(--bg-gradient);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            user-select: none;
+        }
+
+        @media (max-width: 768px) {
+            .era-header {
+                padding: 15px;
+            }
+        }
+
+        .era-header:hover {
+            opacity: 0.9;
+        }
+
+        .era-header h2 {
+            font-size: 1.5em;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .era-header h2 {
+                font-size: 1.2em;
+                gap: 10px;
+            }
+        }
+
+        .era-toggle {
+            font-size: 1.5em;
+            transition: transform 0.3s;
+        }
+
+        @media (max-width: 768px) {
+            .era-toggle {
+                font-size: 1.2em;
+            }
+        }
+
+        .era-toggle.expanded {
+            transform: rotate(90deg);
+        }
+
+        .era-count {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .era-count {
+                padding: 4px 10px;
+                font-size: 0.8em;
+            }
+        }
+
+        .era-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-out;
+        }
+
+        .era-content.expanded {
+            max-height: 5000px;
+            transition: max-height 0.6s ease-in;
+        }
+
+        .sets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .sets-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+                padding: 15px;
+            }
+        }
+
+        @media (min-width: 768px) and (max-width: 1024px) {
+            .sets-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .set-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid var(--border);
+            overflow: hidden;
+        }
+
+        .set-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px var(--card-hover);
+            border-color: var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            .set-card {
+                padding: 15px;
+            }
+        }
+
+        .set-image {
+            width: 100%;
+            height: 150px;
+            object-fit: contain;
+            margin-bottom: 15px;
+            background: var(--bg-alt);
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .set-card h3 {
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-size: 1.3em;
+            transition: color 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .set-card h3 {
+                font-size: 1.1em;
+            }
+        }
+
+        .set-code {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            margin-bottom: 10px;
+        }
+
+        .set-card p {
+            color: var(--text-secondary);
+            margin: 10px 0;
+            transition: color 0.3s ease;
+        }
+
+        .progress-bar {
+            background: var(--border);
+            height: 25px;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            background: var(--bg-gradient);
+            height: 100%;
+            transition: width 0.5s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .cards-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .cards-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .card-item {
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media (max-width: 768px) {
+            .card-item {
+                padding: 10px;
+            }
+        }
+
+        .card-item:hover {
+            box-shadow: 0 4px 12px var(--card-hover);
+            transform: translateY(-2px);
+        }
+
+        .card-item.owned {
+            border-color: var(--success);
+            background: var(--success-bg);
+        }
+
+        .card-item.processing {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .card-image {
+            width: 100%;
+            height: 200px;
+            object-fit: contain;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .card-image {
+                height: 150px;
+            }
+        }
+
+        .card-number {
+            font-weight: bold;
+            color: var(--primary);
+            font-size: 0.9em;
+        }
+
+        .card-name {
+            font-size: 1.1em;
+            margin: 8px 0;
+            color: var(--text-primary);
+            transition: color 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .card-name {
+                font-size: 0.95em;
+            }
+        }
+
+        .card-rarity {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            background: #ffd700;
+            color: #333;
+        }
+
+        @media (max-width: 768px) {
+            .card-rarity {
+                font-size: 0.7em;
+                padding: 2px 8px;
+            }
+        }
+
+        .card-type {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-left: 5px;
+            background: var(--border);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .card-type {
+                font-size: 0.7em;
+                padding: 2px 8px;
+            }
+        }
+
+        .owned-badge {
+            display: inline-block;
+            background: var(--success);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            margin-top: 8px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .back-button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 20px;
+            transition: background 0.3s;
+        }
+
+        .back-button:hover {
+            background: var(--primary-dark);
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .stats-container {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+        }
+
+        .stat-card {
+            background: var(--bg-gradient);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .stat-card {
+                padding: 20px;
+            }
+        }
+
+        .stat-number {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        @media (max-width: 768px) {
+            .stat-number {
+                font-size: 2em;
+            }
+        }
+
+        .stat-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .stat-label {
+                font-size: 0.9em;
+            }
+        }
+
+        .collection-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .collection-item {
+            background: var(--bg-alt);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            gap: 20px;
+            transition: all 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .collection-item {
+                grid-template-columns: 1fr;
+                padding: 15px;
+                gap: 10px;
+            }
+        }
+
+        .collection-info h4 {
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            transition: color 0.3s ease;
+        }
+
+        .collection-details {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            transition: color 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .collection-details {
+                font-size: 0.85em;
+            }
+        }
+
+        .remove-btn {
+            background: var(--error);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .remove-btn:hover {
+            background: #d32f2f;
+        }
+
+        @media (max-width: 768px) {
+            .remove-btn {
+                width: 100%;
+            }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+            font-size: 1.2em;
+            transition: color 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .loading {
+                padding: 20px;
+                font-size: 1em;
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-tertiary);
+            transition: color 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .empty-state {
+                padding: 30px 15px;
+            }
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+            font-size: 1.1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <button class="theme-toggle" onclick="toggleTheme()">
+                <span id="theme-icon">🌙</span>
+                <span id="theme-text">Dark Mode</span>
+            </button>
+            <h1>🎴 Pokemon Card Collection Manager</h1>
+            <p>Track and manage your Pokemon card collection</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('english-sets')">English Sets</button>
+            <button class="tab" onclick="showTab('japanese-sets')">Japanese Sets</button>
+            <button class="tab" onclick="showTab('collection')">My Collection</button>
+            <button class="tab" onclick="showTab('stats')">Statistics</button>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-container" id="search-container" style="display: none;">
+            <input type="text" class="search-input" id="search-input" placeholder="Search sets or cards..." oninput="performSearch()">
+            <button class="search-clear" onclick="clearSearch()">Clear</button>
+        </div>
+
+        <div id="english-sets-tab" class="tab-content active">
+            <div id="english-sets-container" class="loading">Loading English sets...</div>
+        </div>
+
+        <div id="japanese-sets-tab" class="tab-content">
+            <div id="japanese-sets-container" class="loading">Loading Japanese sets...</div>
+        </div>
+
+        <div id="cards-tab" class="tab-content" style="display: none;">
+            <button class="back-button" onclick="backToSets()">← Back to Sets</button>
+            <h2 id="cards-title" style="color: var(--text-primary); transition: color 0.3s;"></h2>
+            <div id="cards-container" class="cards-grid"></div>
+        </div>
+
+       <div id="collection-tab" class="tab-content">
+            <div style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <button class="back-button" onclick="exportCollection()" style="margin-bottom: 0;">📥 Export to CSV</button>
+        </div>
+            <div id="collection-container" class="loading">Loading collection...</div>
+        </div>
+
+        <div id="stats-tab" class="tab-content">
+            <div id="stats-container" class="loading">Loading statistics...</div>
+        </div>
+    </div>
+
+    <script>
+        let previousTab = 'english-sets';
+        let savedScrollPosition = 0;
+        let allSetsData = [];
+        let allCardsData = [];
+
+        // Theme Management
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            const icon = document.getElementById('theme-icon');
+            const text = document.getElementById('theme-text');
+            
+            if (newTheme === 'dark') {
+                icon.textContent = '☀️';
+                text.textContent = 'Light Mode';
+            } else {
+                icon.textContent = '🌙';
+                text.textContent = 'Dark Mode';
+            }
+        }
+
+        // Load saved theme on page load
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            
+            const icon = document.getElementById('theme-icon');
+            const text = document.getElementById('theme-text');
+            
+            if (savedTheme === 'dark') {
+                icon.textContent = '☀️';
+                text.textContent = 'Light Mode';
+            }
+        }
+
+        // Search functionality
+        function performSearch() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            
+            if (previousTab === 'cards') {
+                // Search within cards
+                const cards = document.querySelectorAll('.card-item');
+                let visibleCount = 0;
+                
+                cards.forEach(card => {
+                    const name = card.querySelector('.card-name').textContent.toLowerCase();
+                    const number = card.querySelector('.card-number').textContent.toLowerCase();
+                    const rarity = card.querySelector('.card-rarity').textContent.toLowerCase();
+                    const type = card.querySelector('.card-type').textContent.toLowerCase();
+                    
+                    if (name.includes(query) || number.includes(query) || rarity.includes(query) || type.includes(query)) {
+                        card.style.display = 'flex';
+                        visibleCount++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+                
+                // Show no results message if needed
+                const container = document.getElementById('cards-container');
+                let noResults = container.querySelector('.no-results');
+                
+                if (visibleCount === 0 && query) {
+                    if (!noResults) {
+                        noResults = document.createElement('div');
+                        noResults.className = 'no-results';
+                        noResults.textContent = 'No cards found matching your search';
+                        container.appendChild(noResults);
+                    }
+                } else if (noResults) {
+                    noResults.remove();
+                }
+            } else {
+                // Search within sets
+                const setCards = document.querySelectorAll('.set-card');
+                let visibleCount = 0;
+                
+                setCards.forEach(setCard => {
+                    const setName = setCard.querySelector('h3').textContent.toLowerCase();
+                    const setCode = setCard.querySelector('.set-code').textContent.toLowerCase();
+                    
+                    if (setName.includes(query) || setCode.includes(query)) {
+                        setCard.style.display = 'block';
+                        visibleCount++;
+                    } else {
+                        setCard.style.display = 'none';
+                    }
+                });
+                
+                // Also check if we should hide entire eras
+                document.querySelectorAll('.era-section').forEach(era => {
+                    const visibleSets = era.querySelectorAll('.set-card[style="display: block;"], .set-card:not([style*="display"])');
+                    if (visibleSets.length === 0 && query) {
+                        era.style.display = 'none';
+                    } else {
+                        era.style.display = 'block';
+                    }
+                });
+            }
+        }
+
+        function clearSearch() {
+            document.getElementById('search-input').value = '';
+            
+            // Show all items
+            document.querySelectorAll('.card-item, .set-card, .era-section').forEach(item => {
+                item.style.display = '';
+            });
+            
+            // Remove no results message
+            const noResults = document.querySelector('.no-results');
+            if (noResults) noResults.remove();
+        }
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+            
+            event.target.classList.add('active');
+            
+            // Show/hide search bar based on tab
+            const searchContainer = document.getElementById('search-container');
+            if (tabName !== 'stats') {
+                searchContainer.style.display = 'flex';
+                clearSearch();
+            } else {
+                searchContainer.style.display = 'none';
+            }
+            
+            if (tabName !== 'cards') {
+                previousTab = tabName;
+            }
+            
+            if (tabName === 'english-sets') {
+                document.getElementById('english-sets-tab').style.display = 'block';
+                loadSets('English');
+            } else if (tabName === 'japanese-sets') {
+                document.getElementById('japanese-sets-tab').style.display = 'block';
+                loadSets('Japanese');
+            } else if (tabName === 'collection') {
+                document.getElementById('collection-tab').style.display = 'block';
+                loadCollection();
+            } else if (tabName === 'stats') {
+                document.getElementById('stats-tab').style.display = 'block';
+                loadStats();
+            }
+        }
+
+        function toggleEra(eraName, language) {
+            const eraElement = document.getElementById(`era-${language}-${eraName.replace(/\s+/g, '-')}`);
+            const content = eraElement.querySelector('.era-content');
+            const toggle = eraElement.querySelector('.era-toggle');
+            
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                toggle.classList.remove('expanded');
+            } else {
+                content.classList.add('expanded');
+                toggle.classList.add('expanded');
+            }
+        }
+
+        async function loadSets(language = 'English') {
+            try {
+                const response = await fetch('/api/sets');
+                const allSets = await response.json();
+                
+                allSetsData = allSets.filter(set => set.language === language);
+                const sets = allSetsData;
+                
+                const containerId = language === 'English' ? 'english-sets-container' : 'japanese-sets-container';
+                const container = document.getElementById(containerId);
+                
+                if (!container) return;
+                
+                if (sets.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><p>No ${language} sets found.</p></div>`;
+                    return;
+                }
+                
+                const eraGroups = {};
+                sets.forEach(set => {
+                    const era = set.era || 'Unknown Era';
+                    if (!eraGroups[era]) {
+                        eraGroups[era] = [];
+                    }
+                    eraGroups[era].push(set);
+                });
+                
+                container.innerHTML = Object.keys(eraGroups).map(era => {
+                    const eraSets = eraGroups[era];
+                    const eraId = `era-${language}-${era.replace(/\s+/g, '-')}`;
+                    
+                    return `
+                        <div class="era-section" id="${eraId}">
+                            <div class="era-header" onclick="toggleEra('${era}', '${language}')">
+                                <h2>
+                                    <span class="era-toggle">▶</span>
+                                    ${era}
+                                </h2>
+                                <span class="era-count">${eraSets.length} sets</span>
+                            </div>
+                            <div class="era-content">
+                                <div class="sets-grid">
+                                    ${eraSets.map(set => `
+                                        <div class="set-card" data-set-id="${set.set_id}" data-set-name="${set.set_name.replace(/"/g, '&quot;')}" data-language="${language}" onclick="loadSetCardsById(this)">
+                                            ${set.image_url ? `<img src="${set.image_url}" alt="${set.set_name}" class="set-image" onerror="this.style.display='none'">` : ''}
+                                            <h3>${set.set_name}</h3>
+                                            <span class="set-code">${set.set_code}</span>
+                                            <p>Released: ${set.release_date || 'Unknown'}</p>
+                                            <div class="progress-bar">
+                                                <div class="progress-fill" style="width: ${set.completion_percent}%">
+                                                    ${set.owned_cards}/${set.total_cards} (${set.completion_percent}%)
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+            } catch (error) {
+                console.error('Error loading sets:', error);
+            }
+        }
+
+        function loadSetCardsById(element) {
+            const setId = element.getAttribute('data-set-id');
+            const setName = element.getAttribute('data-set-name');
+            const language = element.getAttribute('data-language');
+            
+            savedScrollPosition = window.scrollY;
+            
+            if (language === 'Japanese') {
+                previousTab = 'japanese-sets';
+            } else {
+                previousTab = 'english-sets';
+            }
+            
+            loadSetCards(setId, setName);
+        }
+
+        
+        async function loadSetCards(setId, setName) {
+            document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+            document.getElementById('cards-tab').style.display = 'block';
+            document.getElementById('cards-title').textContent = setName;
+            
+            // Show search bar for cards
+            document.getElementById('search-container').style.display = 'flex';
+            clearSearch();
+            
+            const container = document.getElementById('cards-container');
+            container.innerHTML = '<div class="loading">Loading cards...</div>';
+            
+            try {
+                const response = await fetch(`/api/sets/${setId}/cards`);
+                const cards = await response.json();
+                
+                window.currentSetId = setId;
+                window.currentSetName = setName;
+                allCardsData = cards;
+                
+                if (cards.error || !Array.isArray(cards)) {
+                    container.innerHTML = `<p style="color: red;">Error loading cards</p>`;
+                    return;
+                }
+                
+                container.innerHTML = cards.map(card => `
+                    <div class="card-item ${card.owned ? 'owned' : ''}" data-card-id="${card.card_id}" data-is-owned="${card.owned}" onclick="toggleCard(${card.card_id}, ${card.owned})">
+                        ${card.image_url ? `<img src="${card.image_url}" alt="${card.card_name}" class="card-image" onerror="this.style.display='none'">` : ''}
+                        <div class="card-number">#${card.card_number}</div>
+                        <div class="card-name">${card.card_name}</div>
+                        <div>
+                            <span class="card-rarity">${card.rarity || 'Common'}</span>
+                            <span class="card-type">${card.card_type || 'N/A'}</span>
+                        </div>
+                        ${card.owned ? `<div class="owned-badge">✓ Owned ${card.quantity > 1 ? `(x${card.quantity})` : ''}</div>` : ''}
+                    </div>
+                `).join('');
+            } catch (error) {
+                container.innerHTML = `<p style="color: red;">Error loading cards: ${error.message}</p>`;
+            }
+        }
+
+        async function toggleCard(cardId, isOwned) {
+            const cardElement = event.currentTarget;
+            
+            if (cardElement.classList.contains('processing')) {
+                return;
+            }
+            
+            cardElement.classList.add('processing');
+            
+            const originalClasses = cardElement.className;
+            const originalHTML = cardElement.innerHTML;
+            
+            try {
+                if (isOwned) {
+                    cardElement.classList.remove('owned');
+                    const badge = cardElement.querySelector('.owned-badge');
+                    if (badge) badge.remove();
+                } else {
+                    cardElement.classList.add('owned');
+                    const badgeHTML = '<div class="owned-badge">✓ Owned</div>';
+                    cardElement.insertAdjacentHTML('beforeend', badgeHTML);
+                }
+                
+                if (isOwned) {
+                    const response = await fetch(`/api/collection/${cardId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to remove from collection');
+                    }
+                } else {
+                    const response = await fetch('/api/collection', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            card_id: cardId,
+                            quantity: 1,
+                            acquired_date: new Date().toISOString().split('T')[0]
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to add to collection');
+                    }
+                }
+                
+                cardElement.setAttribute('data-is-owned', !isOwned);
+                cardElement.setAttribute('onclick', `toggleCard(${cardId}, ${!isOwned})`);
+                
+            } catch (error) {
+                console.error('Error updating collection:', error);
+                cardElement.className = originalClasses;
+                cardElement.innerHTML = originalHTML;
+                alert('Error updating collection: ' + error.message);
+            } finally {
+                cardElement.classList.remove('processing');
+            }
+        }
+
+        function backToSets() {
+            document.getElementById('cards-tab').style.display = 'none';
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            
+            if (previousTab === 'japanese-sets') {
+                document.getElementById('japanese-sets-tab').style.display = 'block';
+                document.querySelectorAll('.tab')[1].classList.add('active');
+            } else {
+                document.getElementById('english-sets-tab').style.display = 'block';
+                document.querySelectorAll('.tab')[0].classList.add('active');
+            }
+            
+            setTimeout(() => {
+                window.scrollTo(0, savedScrollPosition);
+            }, 100);
+        }
+
+        async function loadCollection() {
+            try {
+                const response = await fetch('/api/collection');
+                const collection = await response.json();
+                
+                const container = document.getElementById('collection-container');
+                
+                if (collection.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><p>Your collection is empty. Start adding cards from the Sets tab!</p></div>';
+                    return;
+                }
+                
+                container.className = 'collection-list';
+                container.innerHTML = collection.map(item => `
+                    <div class="collection-item">
+                        <div class="collection-info">
+                            <h4>${item.card_name}</h4>
+                            <div class="collection-details">
+                                 <strong>${item.set_name}</strong> (${item.set_code}) - #${item.card_number}<br>
+                                 ${item.rarity} | ${item.card_type}<br>
+                                 Quantity: ${item.quantity} | Acquired: ${item.acquired_date || 'Unknown'}
+                                 ${item.notes ? `<br>Notes: ${item.notes}` : ''}
+                            </div>
+                        </div>
+                        <button class="remove-btn" onclick="removeFromCollection(${item.card_id})">Remove</button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                document.getElementById('collection-container').innerHTML = `<p style="color: red;">Error loading collection: ${error.message}</p>`;
+            }
+        }
+
+        async function removeFromCollection(cardId) {
+            if (!confirm('Remove this card from your collection?')) return;
+            
+            try {
+                await fetch(`/api/collection/${cardId}`, {
+                    method: 'DELETE'
+                });
+                loadCollection();
+            } catch (error) {
+                alert('Error removing card: ' + error.message);
+            }
+        }
+
+        async function exportCollection() {
+    try {
+        const response = await fetch('/api/collection/export');
+        
+        if (!response.ok) {
+            throw new Error('Failed to export collection');
+        }
+        
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `pokemon_collection_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+    } catch (error) {
+        alert('Error exporting collection: ' + error.message);
+    }
+}
+
+async function loadStats() {
+    try {
+        const response = await fetch('/api/stats');
+        const stats = await response.json();
+        
+        const container = document.getElementById('stats-container');
+        container.style.display = 'block';
+        container.innerHTML = '';
+        
+        // Main stats cards in grid
+        const mainStatsHTML = `
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-label">Total Cards Owned</div>
+                    <div class="stat-number">${stats.total_cards_owned}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Unique Cards</div>
+                    <div class="stat-number">${stats.unique_cards_owned}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Overall Completion</div>
+                    <div class="stat-number">${stats.completion_percent}%</div>
+                    <div class="stat-label">${stats.unique_cards_owned} / ${stats.total_possible_cards}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Most Common Rarity</div>
+                    <div class="stat-number" style="font-size: 1.5em;">${stats.most_common_rarity || 'N/A'}</div>
+                </div>
+            </div>
+        `;
+        
+        // Add detailed breakdowns below main stats
+        const detailsHTML = `
+            <div style="margin-top: 40px;">
+                <h2 style="color: var(--text-primary); margin-bottom: 20px; font-size: 1.8em;">Detailed Breakdown</h2>
+                
+                <!-- Completion by Era -->
+                <div style="margin-bottom: 30px;">
+                    <h3 style="color: var(--primary); margin-bottom: 15px;">Completion by Era</h3>
+                    <div style="display: grid; gap: 15px;">
+                        ${stats.by_era.map(era => `
+                            <div style="background: var(--bg-alt); padding: 20px; border-radius: 10px; border-left: 4px solid var(--primary);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <strong style="color: var(--text-primary); font-size: 1.1em;">${era.era}</strong>
+                                    <span style="color: var(--text-secondary);">${era.owned_cards} / ${era.total_cards}</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${era.completion_percent || 0}%; min-width: ${era.completion_percent > 0 ? 'auto' : '40px'};">
+                                        ${era.completion_percent || 0}%
+                                    </div>
+                                </div>
+                            </div>
+                         `).join('')}
+                        </div>
+                </div>
+                
+                <!-- Completion by Language -->
+                <div style="margin-bottom: 30px;">
+                    <h3 style="color: var(--primary); margin-bottom: 15px;">Completion by Language</h3>
+                    <div style="display: grid; gap: 15px;">
+                        ${stats.by_language.map(lang => `
+                            <div style="background: var(--bg-alt); padding: 20px; border-radius: 10px; border-left: 4px solid var(--secondary);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <strong style="color: var(--text-primary); font-size: 1.1em;">${lang.language}</strong>
+                                    <span style="color: var(--text-secondary);">${lang.owned_cards} / ${lang.total_cards}</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${lang.completion_percent}%">
+                                        ${lang.completion_percent}%
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <!-- Completion by Rarity -->
+                <div style="margin-bottom: 30px;">
+                    <h3 style="color: var(--primary); margin-bottom: 15px;">Completion by Rarity</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                        ${stats.by_rarity.map(rarity => `
+                            <div style="background: var(--bg-alt); padding: 15px; border-radius: 10px; text-align: center;">
+                                <div style="color: var(--text-primary); font-weight: bold; margin-bottom: 8px;">${rarity.rarity}</div>
+                                <div style="color: var(--text-secondary); font-size: 0.9em; margin-bottom: 8px;">${rarity.owned_cards} / ${rarity.total_cards}</div>
+                                <div style="color: var(--primary); font-size: 1.5em; font-weight: bold;">${rarity.completion_percent}%</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <!-- Top and Bottom Sets -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 30px; margin-top: 30px;">
+                    <!-- Most Complete Sets -->
+                    <div>
+                        <h3 style="color: var(--success); margin-bottom: 15px;">🏆 Most Complete Sets</h3>
+                        <div style="display: grid; gap: 10px;">
+                            ${stats.top_complete_sets.map((set, index) => `
+                                <div style="background: var(--bg-alt); padding: 15px; border-radius: 8px; border-left: 4px solid var(--success);">
+                                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                                        <div>
+                                            <div style="color: var(--text-primary); font-weight: bold;">#${index + 1} ${set.set_name}</div>
+                                            <div style="color: var(--text-secondary); font-size: 0.9em; margin-top: 4px;">${set.set_code} - ${set.owned_cards}/${set.total_cards}</div>
+                                        </div>
+                                        <div style="color: var(--success); font-size: 1.3em; font-weight: bold;">${set.completion_percent}%</div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <!-- Least Complete Sets -->
+                    <div>
+                        <h3 style="color: var(--error); margin-bottom: 15px;">📉 Least Complete Sets</h3>
+                        <div style="display: grid; gap: 10px;">
+                            ${stats.least_complete_sets.map((set, index) => `
+                                <div style="background: var(--bg-alt); padding: 15px; border-radius: 8px; border-left: 4px solid var(--error);">
+                                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                                        <div>
+                                            <div style="color: var(--text-primary); font-weight: bold;">#${index + 1} ${set.set_name}</div>
+                                            <div style="color: var(--text-secondary); font-size: 0.9em; margin-top: 4px;">${set.set_code} - ${set.owned_cards}/${set.total_cards}</div>
+                                        </div>
+                                        <div style="color: var(--error); font-size: 1.3em; font-weight: bold;">${set.completion_percent}%</div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        container.innerHTML = mainStatsHTML + detailsHTML;
+        
+    } catch (error) {
+        console.error('Error loading stats:', error);
+        document.getElementById('stats-container').innerHTML = `<p style="color: red;">Error loading stats: ${error.message}</p>`;
+    }
+}
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadTheme();
+            loadSets('English');
+        });
+    </script>
+</body>
+</html>
