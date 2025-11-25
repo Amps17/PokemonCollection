@@ -7,7 +7,7 @@ import StatsScreen from './screens/StatsScreen';
 
 const Stack = createNativeStackNavigator();
 
-export const API_URL = 'http://192.168.0.244:3000/api';
+export const API_URL = 'http://172.24.99.98:5000/api';
 
 export default function App() {
   return (

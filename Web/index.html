@@ -418,24 +418,41 @@
             transition: color 0.3s ease;
         }
 
+        /* FIXED PROGRESS BAR STYLES */
         .progress-bar {
             background: var(--border);
             height: 25px;
             border-radius: 15px;
             overflow: hidden;
             margin: 10px 0;
+            position: relative;
         }
 
         .progress-fill {
             background: var(--bg-gradient);
             height: 100%;
             transition: width 0.5s;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+
+        .progress-text {
+            position: absolute;
+            width: 100%;
+            height: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
             font-size: 0.85em;
             font-weight: bold;
+            z-index: 1;
+            color: var(--text-primary);
+            transition: color 0.3s ease;
+        }
+
+        .progress-bar[data-progress-high="true"] .progress-text {
+            color: white;
         }
 
         .cards-grid {
@@ -1010,10 +1027,9 @@
                                             <h3>${set.set_name}</h3>
                                             <span class="set-code">${set.set_code}</span>
                                             <p>Released: ${set.release_date || 'Unknown'}</p>
-                                            <div class="progress-bar">
-                                                <div class="progress-fill" style="width: ${set.completion_percent}%">
-                                                    ${set.owned_cards}/${set.total_cards} (${set.completion_percent}%)
-                                                </div>
+                                            <div class="progress-bar" data-progress-high="${set.completion_percent >= 50}">
+                                                <div class="progress-fill" style="width: ${set.completion_percent}%"></div>
+                                                <div class="progress-text">${set.owned_cards}/${set.total_cards} (${set.completion_percent}%)</div>
                                             </div>
                                         </div>
                                     `).join('')}
@@ -1087,6 +1103,36 @@
             }
         }
 
+        async function updateSetProgress(setId) {
+            try {
+                // Fetch updated set data
+                const response = await fetch('/api/sets');
+                const allSets = await response.json();
+                
+                // Find the specific set
+                const updatedSet = allSets.find(s => s.set_id == setId);
+                
+                if (!updatedSet) return;
+                
+                // Update the progress bar in the DOM
+                const setCard = document.querySelector(`.set-card[data-set-id="${setId}"]`);
+                if (setCard) {
+                    const progressBar = setCard.querySelector('.progress-bar');
+                    const progressFill = progressBar.querySelector('.progress-fill');
+                    const progressText = progressBar.querySelector('.progress-text');
+                    
+                    // Update the values
+                    progressFill.style.width = `${updatedSet.completion_percent}%`;
+                    progressText.textContent = `${updatedSet.owned_cards}/${updatedSet.total_cards} (${updatedSet.completion_percent}%)`;
+                    
+                    // Update the data attribute for text color
+                    progressBar.setAttribute('data-progress-high', updatedSet.completion_percent >= 50);
+                }
+            } catch (error) {
+                console.error('Error updating set progress:', error);
+            }
+        }
+
         async function toggleCard(cardId, isOwned) {
             const cardElement = event.currentTarget;
             
@@ -1138,6 +1184,9 @@
                 
                 cardElement.setAttribute('data-is-owned', !isOwned);
                 cardElement.setAttribute('onclick', `toggleCard(${cardId}, ${!isOwned})`);
+                
+                // Update the set progress bar in real-time
+                await updateSetProgress(window.currentSetId);
                 
             } catch (error) {
                 console.error('Error updating collection:', error);
@@ -1212,166 +1261,164 @@
         }
 
         async function exportCollection() {
-    try {
-        const response = await fetch('/api/collection/export');
-        
-        if (!response.ok) {
-            throw new Error('Failed to export collection');
+            try {
+                const response = await fetch('/api/collection/export');
+                
+                if (!response.ok) {
+                    throw new Error('Failed to export collection');
+                }
+                
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `pokemon_collection_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            } catch (error) {
+                alert('Error exporting collection: ' + error.message);
+            }
         }
-        
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `pokemon_collection_${new Date().toISOString().split('T')[0]}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-    } catch (error) {
-        alert('Error exporting collection: ' + error.message);
-    }
-}
 
-async function loadStats() {
-    try {
-        const response = await fetch('/api/stats');
-        const stats = await response.json();
-        
-        const container = document.getElementById('stats-container');
-        container.style.display = 'block';
-        container.innerHTML = '';
-        
-        // Main stats cards in grid
-        const mainStatsHTML = `
-            <div class="stats-container">
-                <div class="stat-card">
-                    <div class="stat-label">Total Cards Owned</div>
-                    <div class="stat-number">${stats.total_cards_owned}</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Unique Cards</div>
-                    <div class="stat-number">${stats.unique_cards_owned}</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Overall Completion</div>
-                    <div class="stat-number">${stats.completion_percent}%</div>
-                    <div class="stat-label">${stats.unique_cards_owned} / ${stats.total_possible_cards}</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Most Common Rarity</div>
-                    <div class="stat-number" style="font-size: 1.5em;">${stats.most_common_rarity || 'N/A'}</div>
-                </div>
-            </div>
-        `;
-        
-        // Add detailed breakdowns below main stats
-        const detailsHTML = `
-            <div style="margin-top: 40px;">
-                <h2 style="color: var(--text-primary); margin-bottom: 20px; font-size: 1.8em;">Detailed Breakdown</h2>
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const stats = await response.json();
                 
-                <!-- Completion by Era -->
-                <div style="margin-bottom: 30px;">
-                    <h3 style="color: var(--primary); margin-bottom: 15px;">Completion by Era</h3>
-                    <div style="display: grid; gap: 15px;">
-                        ${stats.by_era.map(era => `
-                            <div style="background: var(--bg-alt); padding: 20px; border-radius: 10px; border-left: 4px solid var(--primary);">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                                    <strong style="color: var(--text-primary); font-size: 1.1em;">${era.era}</strong>
-                                    <span style="color: var(--text-secondary);">${era.owned_cards} / ${era.total_cards}</span>
-                                </div>
-                                <div class="progress-bar">
-                                    <div class="progress-fill" style="width: ${era.completion_percent || 0}%; min-width: ${era.completion_percent > 0 ? 'auto' : '40px'};">
-                                        ${era.completion_percent || 0}%
-                                    </div>
-                                </div>
-                            </div>
-                         `).join('')}
+                const container = document.getElementById('stats-container');
+                container.style.display = 'block';
+                container.innerHTML = '';
+                
+                // Main stats cards in grid
+                const mainStatsHTML = `
+                    <div class="stats-container">
+                        <div class="stat-card">
+                            <div class="stat-label">Total Cards Owned</div>
+                            <div class="stat-number">${stats.total_cards_owned}</div>
                         </div>
-                </div>
-                
-                <!-- Completion by Language -->
-                <div style="margin-bottom: 30px;">
-                    <h3 style="color: var(--primary); margin-bottom: 15px;">Completion by Language</h3>
-                    <div style="display: grid; gap: 15px;">
-                        ${stats.by_language.map(lang => `
-                            <div style="background: var(--bg-alt); padding: 20px; border-radius: 10px; border-left: 4px solid var(--secondary);">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                                    <strong style="color: var(--text-primary); font-size: 1.1em;">${lang.language}</strong>
-                                    <span style="color: var(--text-secondary);">${lang.owned_cards} / ${lang.total_cards}</span>
-                                </div>
-                                <div class="progress-bar">
-                                    <div class="progress-fill" style="width: ${lang.completion_percent}%">
-                                        ${lang.completion_percent}%
-                                    </div>
-                                </div>
-                            </div>
-                        `).join('')}
+                        <div class="stat-card">
+                            <div class="stat-label">Unique Cards</div>
+                            <div class="stat-number">${stats.unique_cards_owned}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Overall Completion</div>
+                            <div class="stat-number">${stats.completion_percent}%</div>
+                            <div class="stat-label">${stats.unique_cards_owned} / ${stats.total_possible_cards}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Most Common Rarity</div>
+                            <div class="stat-number" style="font-size: 1.5em;">${stats.most_common_rarity || 'N/A'}</div>
+                        </div>
                     </div>
-                </div>
+                `;
                 
-                <!-- Completion by Rarity -->
-                <div style="margin-bottom: 30px;">
-                    <h3 style="color: var(--primary); margin-bottom: 15px;">Completion by Rarity</h3>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
-                        ${stats.by_rarity.map(rarity => `
-                            <div style="background: var(--bg-alt); padding: 15px; border-radius: 10px; text-align: center;">
-                                <div style="color: var(--text-primary); font-weight: bold; margin-bottom: 8px;">${rarity.rarity}</div>
-                                <div style="color: var(--text-secondary); font-size: 0.9em; margin-bottom: 8px;">${rarity.owned_cards} / ${rarity.total_cards}</div>
-                                <div style="color: var(--primary); font-size: 1.5em; font-weight: bold;">${rarity.completion_percent}%</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-                
-                <!-- Top and Bottom Sets -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 30px; margin-top: 30px;">
-                    <!-- Most Complete Sets -->
-                    <div>
-                        <h3 style="color: var(--success); margin-bottom: 15px;">🏆 Most Complete Sets</h3>
-                        <div style="display: grid; gap: 10px;">
-                            ${stats.top_complete_sets.map((set, index) => `
-                                <div style="background: var(--bg-alt); padding: 15px; border-radius: 8px; border-left: 4px solid var(--success);">
-                                    <div style="display: flex; justify-content: space-between; align-items: start;">
-                                        <div>
-                                            <div style="color: var(--text-primary); font-weight: bold;">#${index + 1} ${set.set_name}</div>
-                                            <div style="color: var(--text-secondary); font-size: 0.9em; margin-top: 4px;">${set.set_code} - ${set.owned_cards}/${set.total_cards}</div>
+                // Add detailed breakdowns below main stats
+                const detailsHTML = `
+                    <div style="margin-top: 40px;">
+                        <h2 style="color: var(--text-primary); margin-bottom: 20px; font-size: 1.8em;">Detailed Breakdown</h2>
+                        
+                        <!-- Completion by Era -->
+                        <div style="margin-bottom: 30px;">
+                            <h3 style="color: var(--primary); margin-bottom: 15px;">Completion by Era</h3>
+                            <div style="display: grid; gap: 15px;">
+                                ${stats.by_era.map(era => `
+                                    <div style="background: var(--bg-alt); padding: 20px; border-radius: 10px; border-left: 4px solid var(--primary);">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                            <strong style="color: var(--text-primary); font-size: 1.1em;">${era.era}</strong>
+                                            <span style="color: var(--text-secondary);">${era.owned_cards} / ${era.total_cards}</span>
                                         </div>
-                                        <div style="color: var(--success); font-size: 1.3em; font-weight: bold;">${set.completion_percent}%</div>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                    
-                    <!-- Least Complete Sets -->
-                    <div>
-                        <h3 style="color: var(--error); margin-bottom: 15px;">📉 Least Complete Sets</h3>
-                        <div style="display: grid; gap: 10px;">
-                            ${stats.least_complete_sets.map((set, index) => `
-                                <div style="background: var(--bg-alt); padding: 15px; border-radius: 8px; border-left: 4px solid var(--error);">
-                                    <div style="display: flex; justify-content: space-between; align-items: start;">
-                                        <div>
-                                            <div style="color: var(--text-primary); font-weight: bold;">#${index + 1} ${set.set_name}</div>
-                                            <div style="color: var(--text-secondary); font-size: 0.9em; margin-top: 4px;">${set.set_code} - ${set.owned_cards}/${set.total_cards}</div>
+                                        <div class="progress-bar" data-progress-high="${(era.completion_percent || 0) >= 50}">
+                                            <div class="progress-fill" style="width: ${era.completion_percent || 0}%"></div>
+                                            <div class="progress-text">${era.completion_percent || 0}%</div>
                                         </div>
-                                        <div style="color: var(--error); font-size: 1.3em; font-weight: bold;">${set.completion_percent}%</div>
                                     </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        
+                        <!-- Completion by Language -->
+                        <div style="margin-bottom: 30px;">
+                            <h3 style="color: var(--primary); margin-bottom: 15px;">Completion by Language</h3>
+                            <div style="display: grid; gap: 15px;">
+                                ${stats.by_language.map(lang => `
+                                    <div style="background: var(--bg-alt); padding: 20px; border-radius: 10px; border-left: 4px solid var(--secondary);">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                            <strong style="color: var(--text-primary); font-size: 1.1em;">${lang.language}</strong>
+                                            <span style="color: var(--text-secondary);">${lang.owned_cards} / ${lang.total_cards}</span>
+                                        </div>
+                                        <div class="progress-bar" data-progress-high="${lang.completion_percent >= 50}">
+                                            <div class="progress-fill" style="width: ${lang.completion_percent}%"></div>
+                                            <div class="progress-text">${lang.completion_percent}%</div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        
+                        <!-- Completion by Rarity -->
+                        <div style="margin-bottom: 30px;">
+                            <h3 style="color: var(--primary); margin-bottom: 15px;">Completion by Rarity</h3>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                                ${stats.by_rarity.map(rarity => `
+                                    <div style="background: var(--bg-alt); padding: 15px; border-radius: 10px; text-align: center;">
+                                        <div style="color: var(--text-primary); font-weight: bold; margin-bottom: 8px;">${rarity.rarity}</div>
+                                        <div style="color: var(--text-secondary); font-size: 0.9em; margin-bottom: 8px;">${rarity.owned_cards} / ${rarity.total_cards}</div>
+                                        <div style="color: var(--primary); font-size: 1.5em; font-weight: bold;">${rarity.completion_percent}%</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        
+                        <!-- Top and Bottom Sets -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 30px; margin-top: 30px;">
+                            <!-- Most Complete Sets -->
+                            <div>
+                                <h3 style="color: var(--success); margin-bottom: 15px;">🏆 Most Complete Sets</h3>
+                                <div style="display: grid; gap: 10px;">
+                                    ${stats.top_complete_sets.map((set, index) => `
+                                        <div style="background: var(--bg-alt); padding: 15px; border-radius: 8px; border-left: 4px solid var(--success);">
+                                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                                <div>
+                                                    <div style="color: var(--text-primary); font-weight: bold;">#${index + 1} ${set.set_name}</div>
+                                                    <div style="color: var(--text-secondary); font-size: 0.9em; margin-top: 4px;">${set.set_code} - ${set.owned_cards}/${set.total_cards}</div>
+                                                </div>
+                                                <div style="color: var(--success); font-size: 1.3em; font-weight: bold;">${set.completion_percent}%</div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
                                 </div>
-                            `).join('')}
+                            </div>
+                            
+                            <!-- Least Complete Sets -->
+                            <div>
+                                <h3 style="color: var(--error); margin-bottom: 15px;">📉 Least Complete Sets</h3>
+                                <div style="display: grid; gap: 10px;">
+                                    ${stats.least_complete_sets.map((set, index) => `
+                                        <div style="background: var(--bg-alt); padding: 15px; border-radius: 8px; border-left: 4px solid var(--error);">
+                                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                                <div>
+                                                    <div style="color: var(--text-primary); font-weight: bold;">#${index + 1} ${set.set_name}</div>
+                                                    <div style="color: var(--text-secondary); font-size: 0.9em; margin-top: 4px;">${set.set_code} - ${set.owned_cards}/${set.total_cards}</div>
+                                                </div>
+                                                <div style="color: var(--error); font-size: 1.3em; font-weight: bold;">${set.completion_percent}%</div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        `;
-        
-        container.innerHTML = mainStatsHTML + detailsHTML;
-        
-    } catch (error) {
-        console.error('Error loading stats:', error);
-        document.getElementById('stats-container').innerHTML = `<p style="color: red;">Error loading stats: ${error.message}</p>`;
-    }
-}
+                `;
+                
+                container.innerHTML = mainStatsHTML + detailsHTML;
+                
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                document.getElementById('stats-container').innerHTML = `<p style="color: red;">Error loading stats: ${error.message}</p>`;
+            }
+        }
 
         // Initialize on page load
         window.addEventListener('DOMContentLoaded', () => {

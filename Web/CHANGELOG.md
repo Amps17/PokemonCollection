@@ -8,9 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.1] - 2025-10-12
 
 ### Added
-- More support for later Japanse sets.
-- Export collection to CSV
-- Better breakdown of the Collection %
+- Small change to how progress bar shows on the individual sets.
+- Added live % tracking as this was missing.
+- Fully functional Mobile App
+- Locally hosted API
 
 ### Features
 - 🎨 Beautiful gradient UI with smooth animations
