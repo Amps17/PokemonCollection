@@ -9,11 +9,17 @@ import {
     View,
 } from 'react-native';
 import { API_URL } from '../App';
+import { useTheme } from '../ThemeContext';
 
 export default function CollectionScreen() {
+  const { theme } = useTheme();
   const [collection, setCollection] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    fetchCollection();
+  }, []);
 
   const fetchCollection = async () => {
     try {
@@ -28,68 +34,78 @@ export default function CollectionScreen() {
     }
   };
 
-  useEffect(() => {
-    fetchCollection();
-  }, []);
-
   const onRefresh = () => {
     setRefreshing(true);
     fetchCollection();
   };
 
   const renderCard = ({ item }) => (
-    <View style={styles.cardItem}>
+    <View style={[styles.cardItem, { backgroundColor: theme.cardBg, shadowColor: theme.shadow }]}>
       <View style={styles.cardHeader}>
-        <Text style={styles.cardName} numberOfLines={1}>{item.card_name}</Text>
-        <Text style={styles.quantity}>x{item.quantity}</Text>
+        <Text style={[styles.cardName, { color: theme.text }]} numberOfLines={2}>
+          {item.card_name}
+        </Text>
+        <Text style={[styles.quantity, { color: theme.success }]}>x{item.quantity}</Text>
       </View>
-      <Text style={styles.cardDetails}>
+      <Text style={[styles.cardDetails, { color: theme.textSecondary }]}>
         #{item.card_number} • {item.rarity}
       </Text>
-      <Text style={styles.setName}>{item.set_name} ({item.set_code})</Text>
+      <Text style={[styles.setName, { color: theme.primary }]}>
+        {item.set_name} ({item.set_code})
+      </Text>
       {item.acquired_date && (
-        <Text style={styles.date}>Added: {item.acquired_date}</Text>
+        <Text style={[styles.date, { color: theme.textTertiary }]}>
+          Added: {item.acquired_date}
+        </Text>
       )}
       {item.notes && (
-        <Text style={styles.notes}>{item.notes}</Text>
+        <Text style={[styles.notes, { color: theme.textSecondary }]}>{item.notes}</Text>
       )}
     </View>
   );
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#e63946" />
+      <View style={[styles.centered, { backgroundColor: theme.background }]}>
+        <ActivityIndicator size="large" color={theme.primary} />
+        <Text style={[styles.loadingText, { color: theme.textSecondary }]}>Loading collection...</Text>
       </View>
     );
   }
 
   if (collection.length === 0) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.emptyText}>No cards in collection yet</Text>
-        <Text style={styles.emptySubtext}>Start adding cards from sets!</Text>
+      <View style={[styles.centered, { backgroundColor: theme.background }]}>
+        <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
+          No cards in collection yet
+        </Text>
+        <Text style={[styles.emptySubtext, { color: theme.textTertiary }]}>
+          Start adding cards from sets!
+        </Text>
       </View>
     );
   }
 
+  const totalCards = collection.reduce((sum, card) => sum + card.quantity, 0);
+
   return (
-    <View style={styles.container}>
-      <View style={styles.summary}>
-        <Text style={styles.summaryText}>
-          Total Cards: {collection.reduce((sum, card) => sum + card.quantity, 0)}
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={[styles.summary, { backgroundColor: theme.backgroundAlt, borderBottomColor: theme.border }]}>
+        <Text style={[styles.summaryText, { color: theme.primary }]}>
+          Total Cards: {totalCards}
         </Text>
-        <Text style={styles.summaryText}>
+        <Text style={[styles.summaryText, { color: theme.primary }]}>
           Unique Cards: {collection.length}
         </Text>
       </View>
       <FlatList
         data={collection}
         renderItem={renderCard}
-        keyExtractor={(item) => item.collection_id.toString()}
+        keyExtractor={(item) => item.card_id.toString()}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
+        contentContainerStyle={styles.listContent}
       />
     </View>
   );
@@ -98,32 +114,33 @@ export default function CollectionScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+  },
   summary: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     padding: 15,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
   },
   summaryText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#e63946',
+  },
+  listContent: {
+    padding: 10,
   },
   cardItem: {
-    backgroundColor: '#fff',
-    margin: 10,
+    marginBottom: 10,
     padding: 15,
     borderRadius: 12,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -143,38 +160,32 @@ const styles = StyleSheet.create({
   quantity: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#4caf50',
     marginLeft: 10,
   },
   cardDetails: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 4,
   },
   setName: {
     fontSize: 14,
-    color: '#e63946',
     marginBottom: 4,
+    fontWeight: '600',
   },
   date: {
     fontSize: 12,
-    color: '#999',
     marginTop: 4,
   },
   notes: {
     fontSize: 12,
-    color: '#666',
     fontStyle: 'italic',
     marginTop: 4,
   },
   emptyText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#666',
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#999',
     marginTop: 8,
   },
 });

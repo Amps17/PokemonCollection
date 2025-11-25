@@ -4,19 +4,22 @@ import CardsScreen from './screens/CardsScreen';
 import CollectionScreen from './screens/CollectionScreen';
 import SetsScreen from './screens/SetsScreen';
 import StatsScreen from './screens/StatsScreen';
+import { ThemeProvider, useTheme } from './ThemeContext';
 
 const Stack = createNativeStackNavigator();
 
 export const API_URL = 'http://172.24.99.98:5000/api';
 
-export default function App() {
+function AppNavigator() {
+  const { theme } = useTheme();
+
   return (
     <NavigationContainer>
       <Stack.Navigator
         initialRouteName="Sets"
         screenOptions={{
           headerStyle: {
-            backgroundColor: '#e63946',
+            backgroundColor: theme.primary,
           },
           headerTintColor: '#fff',
           headerTitleStyle: {
@@ -46,5 +49,13 @@ export default function App() {
         />
       </Stack.Navigator>
     </NavigationContainer>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AppNavigator />
+    </ThemeProvider>
   );
 }
