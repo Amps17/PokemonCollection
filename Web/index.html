@@ -249,6 +249,40 @@
             display: block;
         }
 
+        /* Back to Top Button */
+        .back-to-top-btn {
+            display: inline-block;
+            margin: 15px auto;
+            padding: 6px 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 1px 3px rgba(102, 126, 234, 0.2);
+            text-align: center;
+        }
+
+        .back-to-top-btn:hover {
+            background: var(--primary-dark);
+            box-shadow: 0 2px 5px rgba(102, 126, 234, 0.3);
+        }
+
+        .back-to-top-container {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .back-to-top-btn {
+                padding: 5px 12px;
+                font-size: 11px;
+            }
+        }
+
         /* ERA GROUPING STYLES */
         .era-section {
             margin-bottom: 25px;
@@ -759,6 +793,188 @@
             color: var(--text-secondary);
             font-size: 1.1em;
         }
+
+        /* Wishlist Styles */
+        .wishlist-item {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 20px;
+            align-items: start;
+            border-left: 4px solid var(--primary);
+            transition: all 0.3s ease;
+        }
+
+        .wishlist-card-image {
+            width: 120px;
+            height: 168px;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .wishlist-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .wishlist-item[data-priority="High"] {
+            border-left-color: #f44336;
+        }
+
+        .wishlist-item[data-priority="Medium"] {
+            border-left-color: #ff9800;
+        }
+
+        .wishlist-item[data-priority="Low"] {
+            border-left-color: #4caf50;
+        }
+
+        .wishlist-info h4 {
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .wishlist-details {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        .wishlist-priority {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+
+        .wishlist-priority[data-priority="High"] {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        [data-theme="dark"] .wishlist-priority[data-priority="High"] {
+            background: #3a1f1f;
+            color: #ef5350;
+        }
+
+        .wishlist-priority[data-priority="Medium"] {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        [data-theme="dark"] .wishlist-priority[data-priority="Medium"] {
+            background: #3a2f1f;
+            color: #ff9800;
+        }
+
+        .wishlist-priority[data-priority="Low"] {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        [data-theme="dark"] .wishlist-priority[data-priority="Low"] {
+            background: #1f3a1f;
+            color: #66bb6a;
+        }
+
+        .wishlist-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .wishlist-actions button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .priority-btn {
+            background: var(--primary);
+            color: white;
+        }
+
+        .priority-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .acquired-btn {
+            background: var(--success);
+            color: white;
+        }
+
+        .acquired-btn:hover {
+            background: #388e3c;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid var(--border);
+            background: var(--card-bg);
+            color: var(--text-primary);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+
+        .filter-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .wishlist-notes {
+            background: var(--bg-alt);
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 8px;
+            font-style: italic;
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 768px) {
+            .wishlist-item {
+                grid-template-columns: 1fr;
+                padding: 15px;
+                gap: 15px;
+            }
+
+            .wishlist-card-image {
+                width: 100%;
+                height: auto;
+                max-width: 200px;
+                margin: 0 auto;
+                display: block;
+            }
+
+            .wishlist-actions {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+
+            .wishlist-actions button {
+                flex: 1;
+                min-width: 120px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -775,12 +991,13 @@
         <div class="tabs">
             <button class="tab active" onclick="showTab('english-sets')">English Sets</button>
             <button class="tab" onclick="showTab('japanese-sets')">Japanese Sets</button>
+            <button class="tab" onclick="showTab('wishlist')">⭐ Wishlist</button>
             <button class="tab" onclick="showTab('collection')">My Collection</button>
             <button class="tab" onclick="showTab('stats')">Statistics</button>
         </div>
 
         <!-- Search Bar -->
-        <div class="search-container" id="search-container" style="display: none;">
+        <div class="search-container" id="search-container">
             <input type="text" class="search-input" id="search-input" placeholder="Search sets or cards..." oninput="performSearch()">
             <button class="search-clear" onclick="clearSearch()">Clear</button>
         </div>
@@ -804,6 +1021,20 @@
                 <button class="back-button" onclick="exportCollection()" style="margin-bottom: 0;">📥 Export to CSV</button>
         </div>
             <div id="collection-container" class="loading">Loading collection...</div>
+        </div>
+
+        <div id="wishlist-tab" class="tab-content">
+            <div style="margin-bottom: 20px;">
+                <h2 style="color: var(--text-primary); margin-bottom: 10px;">⭐ Your Wishlist</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 15px;">Cards you're hunting for. Add them from any set's card view!</p>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="filter-btn" onclick="filterWishlistByPriority('all')" data-priority="all">All</button>
+                    <button class="filter-btn" onclick="filterWishlistByPriority('High')" data-priority="High">🔴 High Priority</button>
+                    <button class="filter-btn" onclick="filterWishlistByPriority('Medium')" data-priority="Medium">🟡 Medium Priority</button>
+                    <button class="filter-btn" onclick="filterWishlistByPriority('Low')" data-priority="Low">🟢 Low Priority</button>
+                </div>
+            </div>
+            <div id="wishlist-container" class="loading">Loading wishlist...</div>
         </div>
 
         <div id="stats-tab" class="tab-content">
@@ -889,6 +1120,36 @@
                 } else if (noResults) {
                     noResults.remove();
                 }
+            } else if (previousTab === 'collection') {
+                // Search within collection
+                const collectionItems = document.querySelectorAll('.collection-item');
+                let visibleCount = 0;
+                
+                collectionItems.forEach(item => {
+                    const text = item.textContent.toLowerCase();
+                    
+                    if (text.includes(query)) {
+                        item.style.display = 'flex';
+                        visibleCount++;
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+                
+                // Show no results message if needed
+                const container = document.getElementById('collection-container');
+                let noResults = container.querySelector('.no-results');
+                
+                if (visibleCount === 0 && query) {
+                    if (!noResults) {
+                        noResults = document.createElement('div');
+                        noResults.className = 'no-results';
+                        noResults.textContent = 'No collection items found matching your search';
+                        container.appendChild(noResults);
+                    }
+                } else if (noResults) {
+                    noResults.remove();
+                }
             } else {
                 // Search within sets
                 const setCards = document.querySelectorAll('.set-card');
@@ -922,7 +1183,7 @@
             document.getElementById('search-input').value = '';
             
             // Show all items
-            document.querySelectorAll('.card-item, .set-card, .era-section').forEach(item => {
+            document.querySelectorAll('.card-item, .set-card, .era-section, .collection-item, .wishlist-item').forEach(item => {
                 item.style.display = '';
             });
             
@@ -939,11 +1200,15 @@
             
             // Show/hide search bar based on tab
             const searchContainer = document.getElementById('search-container');
-            if (tabName !== 'stats') {
-                searchContainer.style.display = 'flex';
-                clearSearch();
-            } else {
+            if (tabName === 'stats') {
                 searchContainer.style.display = 'none';
+            } else {
+                searchContainer.style.display = 'flex';
+                // Only clear search when switching between different types of content
+                if ((previousTab === 'cards' && tabName !== 'cards') || 
+                    (previousTab !== 'cards' && tabName === 'cards')) {
+                    clearSearch();
+                }
             }
             
             if (tabName !== 'cards') {
@@ -956,6 +1221,9 @@
             } else if (tabName === 'japanese-sets') {
                 document.getElementById('japanese-sets-tab').style.display = 'block';
                 loadSets('Japanese');
+            } else if (tabName === 'wishlist') {
+                document.getElementById('wishlist-tab').style.display = 'block';
+                loadWishlist();
             } else if (tabName === 'collection') {
                 document.getElementById('collection-tab').style.display = 'block';
                 loadCollection();
@@ -1087,7 +1355,11 @@
                 }
                 
                 container.innerHTML = cards.map(card => `
-                    <div class="card-item ${card.owned ? 'owned' : ''}" data-card-id="${card.card_id}" data-is-owned="${card.owned}" onclick="toggleCard(${card.card_id}, ${card.owned})">
+                    <div class="card-item ${card.owned ? 'owned' : ''}" 
+                         data-card-id="${card.card_id}" 
+                         data-is-owned="${card.owned}" 
+                         onclick="toggleCard(${card.card_id}, ${card.owned})"
+                         oncontextmenu="showCardContextMenu(event, ${card.card_id}, '${card.card_name.replace(/'/g, "\\'")}', ${card.owned})">
                         ${card.image_url ? `<img src="${card.image_url}" alt="${card.card_name}" class="card-image" onerror="this.style.display='none'">` : ''}
                         <div class="card-number">#${card.card_number}</div>
                         <div class="card-name">${card.card_name}</div>
@@ -1098,6 +1370,18 @@
                         ${card.owned ? `<div class="owned-badge">✓ Owned ${card.quantity > 1 ? `(x${card.quantity})` : ''}</div>` : ''}
                     </div>
                 `).join('');
+                
+                // Add back to top button after all cards
+                const backToTopContainer = document.createElement('div');
+                backToTopContainer.className = 'back-to-top-container';
+                
+                const backToTopBtn = document.createElement('button');
+                backToTopBtn.className = 'back-to-top-btn';
+                backToTopBtn.innerHTML = '⬆️ Back to Top';
+                backToTopBtn.onclick = scrollToTop;
+                
+                backToTopContainer.appendChild(backToTopBtn);
+                container.appendChild(backToTopContainer);
             } catch (error) {
                 container.innerHTML = `<p style="color: red;">Error loading cards: ${error.message}</p>`;
             }
@@ -1242,6 +1526,21 @@
                         <button class="remove-btn" onclick="removeFromCollection(${item.card_id})">Remove</button>
                     </div>
                 `).join('');
+                
+                // Add back to top button
+                if (collection.length > 10) {
+                    const backToTopContainer = document.createElement('div');
+                    backToTopContainer.style.textAlign = 'center';
+                    backToTopContainer.style.marginTop = '15px';
+                    
+                    const backToTopBtn = document.createElement('button');
+                    backToTopBtn.className = 'back-to-top-btn';
+                    backToTopBtn.innerHTML = '⬆️ Back to Top';
+                    backToTopBtn.onclick = scrollToTop;
+                    
+                    backToTopContainer.appendChild(backToTopBtn);
+                    container.appendChild(backToTopContainer);
+                }
             } catch (error) {
                 document.getElementById('collection-container').innerHTML = `<p style="color: red;">Error loading collection: ${error.message}</p>`;
             }
@@ -1420,10 +1719,252 @@
             }
         }
 
+        // Wishlist Functions
+        async function loadWishlist() {
+            try {
+                const response = await fetch('/api/wishlist');
+                const wishlist = await response.json();
+                
+                const container = document.getElementById('wishlist-container');
+                
+                if (wishlist.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><p>Your wishlist is empty. Right-click any card to add it to your wishlist!</p></div>';
+                    return;
+                }
+                
+                container.innerHTML = wishlist.map(item => `
+                    <div class="wishlist-item" data-priority="${item.priority}" data-wishlist-id="${item.wishlist_id}">
+                        ${item.image_url ? `<img src="${item.image_url}" alt="${item.card_name}" class="wishlist-card-image" onerror="this.style.display='none'">` : ''}
+                        <div class="wishlist-info">
+                            <h4>${item.card_name}</h4>
+                            <div class="wishlist-details">
+                                <strong>${item.set_name}</strong> (${item.set_code}) - #${item.card_number}<br>
+                                ${item.rarity} | ${item.card_type}<br>
+                                ${item.language} | ${item.era}<br>
+                                Added: ${item.added_date || 'Unknown'}
+                            </div>
+                            <div class="wishlist-priority" data-priority="${item.priority}">
+                                ${item.priority === 'High' ? '🔴' : item.priority === 'Medium' ? '🟡' : '🟢'} ${item.priority} Priority
+                            </div>
+                            ${item.notes ? `<div class="wishlist-notes">📝 ${item.notes}</div>` : ''}
+                        </div>
+                        <div class="wishlist-actions">
+                            <button class="priority-btn" onclick="changePriority(${item.wishlist_id}, '${item.priority}')">
+                                Change Priority
+                            </button>
+                            <button class="acquired-btn" onclick="markAsAcquired(${item.card_id}, ${item.wishlist_id})">
+                                ✓ Mark as Acquired
+                            </button>
+                            <button class="remove-btn" onclick="removeFromWishlist(${item.wishlist_id})">
+                                Remove
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+                
+                // Add back to top button
+                if (wishlist.length > 10) {
+                    const backToTopContainer = document.createElement('div');
+                    backToTopContainer.style.textAlign = 'center';
+                    backToTopContainer.style.marginTop = '15px';
+                    
+                    const backToTopBtn = document.createElement('button');
+                    backToTopBtn.className = 'back-to-top-btn';
+                    backToTopBtn.innerHTML = '⬆️ Back to Top';
+                    backToTopBtn.onclick = scrollToTop;
+                    
+                    backToTopContainer.appendChild(backToTopBtn);
+                    container.appendChild(backToTopContainer);
+                }
+            } catch (error) {
+                document.getElementById('wishlist-container').innerHTML = `<p style="color: red;">Error loading wishlist: ${error.message}</p>`;
+            }
+        }
+
+        async function addToWishlist(cardId, cardName) {
+            const priority = prompt(`Add "${cardName}" to wishlist.\n\nSelect priority (High/Medium/Low):`, 'Medium');
+            
+            if (!priority) return;
+            
+            const validPriorities = ['High', 'Medium', 'Low'];
+            const normalizedPriority = priority.charAt(0).toUpperCase() + priority.slice(1).toLowerCase();
+            
+            if (!validPriorities.includes(normalizedPriority)) {
+                alert('Invalid priority. Please use High, Medium, or Low.');
+                return;
+            }
+            
+            const notes = prompt('Add notes (optional):') || '';
+            
+            try {
+                const response = await fetch('/api/wishlist', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        card_id: cardId,
+                        priority: normalizedPriority,
+                        notes: notes
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    alert(result.error || 'Failed to add to wishlist');
+                    return;
+                }
+                
+                alert(`✓ Added "${cardName}" to wishlist!`);
+                
+            } catch (error) {
+                alert('Error adding to wishlist: ' + error.message);
+            }
+        }
+
+        async function removeFromWishlist(wishlistId) {
+            if (!confirm('Remove this card from your wishlist?')) return;
+            
+            try {
+                await fetch(`/api/wishlist/${wishlistId}`, {
+                    method: 'DELETE'
+                });
+                loadWishlist();
+            } catch (error) {
+                alert('Error removing from wishlist: ' + error.message);
+            }
+        }
+
+        async function changePriority(wishlistId, currentPriority) {
+            const priorities = ['High', 'Medium', 'Low'];
+            const currentIndex = priorities.indexOf(currentPriority);
+            const nextPriority = priorities[(currentIndex + 1) % 3];
+            
+            try {
+                await fetch(`/api/wishlist/${wishlistId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ priority: nextPriority })
+                });
+                loadWishlist();
+            } catch (error) {
+                alert('Error updating priority: ' + error.message);
+            }
+        }
+
+        async function markAsAcquired(cardId, wishlistId) {
+            if (!confirm('Mark this card as acquired and add to collection?')) return;
+            
+            try {
+                // Add to collection
+                await fetch('/api/collection', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        card_id: cardId,
+                        quantity: 1,
+                        acquired_date: new Date().toISOString().split('T')[0]
+                    })
+                });
+                
+                // Remove from wishlist
+                await fetch(`/api/wishlist/${wishlistId}`, {
+                    method: 'DELETE'
+                });
+                
+                alert('✓ Card added to collection and removed from wishlist!');
+                loadWishlist();
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        function filterWishlistByPriority(priority) {
+            // Update active button
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('data-priority') === priority) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Filter items
+            const items = document.querySelectorAll('.wishlist-item');
+            items.forEach(item => {
+                if (priority === 'all' || item.getAttribute('data-priority') === priority) {
+                    item.style.display = 'grid';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function showCardContextMenu(event, cardId, cardName, isOwned) {
+            event.preventDefault();
+            
+            if (isOwned) {
+                return; // Don't show menu for owned cards
+            }
+            
+            const confirmAdd = confirm(`Add "${cardName}" to wishlist?`);
+            if (confirmAdd) {
+                addToWishlist(cardId, cardName);
+            }
+        }
+
+        // Update search to include wishlist
+        const originalPerformSearch = performSearch;
+        performSearch = function() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            
+            if (previousTab === 'wishlist') {
+                const wishlistItems = document.querySelectorAll('.wishlist-item');
+                let visibleCount = 0;
+                
+                wishlistItems.forEach(item => {
+                    const text = item.textContent.toLowerCase();
+                    
+                    if (text.includes(query)) {
+                        item.style.display = 'grid';
+                        visibleCount++;
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+                
+                const container = document.getElementById('wishlist-container');
+                let noResults = container.querySelector('.no-results');
+                
+                if (visibleCount === 0 && query) {
+                    if (!noResults) {
+                        noResults = document.createElement('div');
+                        noResults.className = 'no-results';
+                        noResults.textContent = 'No wishlist items found matching your search';
+                        container.appendChild(noResults);
+                    }
+                } else if (noResults) {
+                    noResults.remove();
+                }
+            } else {
+                originalPerformSearch();
+            }
+        };
+
+        // Scroll to top function
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+
         // Initialize on page load
         window.addEventListener('DOMContentLoaded', () => {
             loadTheme();
             loadSets('English');
+            
+            // Set "All" filter as active by default
+            const allFilterBtn = document.querySelector('.filter-btn[data-priority="all"]');
+            if (allFilterBtn) allFilterBtn.classList.add('active');
         });
     </script>
 </body>

@@ -5,12 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.1] - 2025-10-12
+## [1.0.3] - 2025-12-16
 
 ### Added
-- Added Dark Mode compatability to Mobile app
-- Ensured Mobile app matches Web app
-- 
+- Functional Search feature. Bug Fix.
+- Wishlist feature. 
+- Back to Top button added.
 
 ### Features
 - 🎨 Beautiful gradient UI with smooth animations
@@ -34,7 +34,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Planned for Future Releases
 - User authentication system
 - Multi-user support
-- Card image integration from Serebii
 - Advanced filtering options
 - Trade management system
 - Value tracking

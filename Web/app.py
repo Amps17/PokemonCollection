@@ -479,6 +479,139 @@ def export_collection():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/wishlist', methods=['GET'])
+def get_wishlist():
+    """Get all cards in wishlist"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        query = """
+            SELECT w.wishlist_id, w.card_id, w.priority, w.notes, w.added_date,
+                   c.card_name, c.card_number, c.rarity, c.card_type,
+                   s.set_name, s.set_code, s.language, s.era,
+                   c.image_url
+            FROM wishlist w
+            JOIN cards c ON w.card_id = c.card_id
+            JOIN sets s ON c.set_id = s.set_id
+            ORDER BY 
+                CASE w.priority 
+                    WHEN 'High' THEN 1 
+                    WHEN 'Medium' THEN 2 
+                    WHEN 'Low' THEN 3 
+                END,
+                w.added_date DESC
+        """
+        cursor.execute(query)
+        
+        wishlist = []
+        for row in cursor.fetchall():
+            wishlist.append({
+                'wishlist_id': row[0],
+                'card_id': row[1],
+                'priority': row[2],
+                'notes': row[3],
+                'added_date': row[4].strftime('%Y-%m-%d') if row[4] else None,
+                'card_name': row[5],
+                'card_number': row[6],
+                'rarity': row[7],
+                'card_type': row[8],
+                'set_name': row[9],
+                'set_code': row[10],
+                'language': row[11],
+                'era': row[12],
+                'image_url': row[13]
+            })
+        
+        conn.close()
+        return jsonify(wishlist)
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/wishlist', methods=['POST'])
+def add_to_wishlist():
+    """Add a card to wishlist"""
+    try:
+        data = request.json
+        card_id = data.get('card_id')
+        priority = data.get('priority', 'Medium')
+        notes = data.get('notes', '')
+        
+        if not card_id:
+            return jsonify({'error': 'card_id is required'}), 400
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Check if already in wishlist
+        cursor.execute("SELECT wishlist_id FROM wishlist WHERE card_id = ?", card_id)
+        if cursor.fetchone():
+            conn.close()
+            return jsonify({'error': 'Card already in wishlist'}), 400
+        
+        # Check if already owned
+        cursor.execute("SELECT collection_id FROM collection WHERE card_id = ?", card_id)
+        if cursor.fetchone():
+            conn.close()
+            return jsonify({'error': 'You already own this card!'}), 400
+        
+        cursor.execute(
+            "INSERT INTO wishlist (card_id, priority, notes) VALUES (?, ?, ?)",
+            card_id, priority, notes
+        )
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'Card added to wishlist'})
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/wishlist/<int:wishlist_id>', methods=['DELETE'])
+def remove_from_wishlist(wishlist_id):
+    """Remove a card from wishlist"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("DELETE FROM wishlist WHERE wishlist_id = ?", wishlist_id)
+        conn.commit()
+        
+        if cursor.rowcount == 0:
+            conn.close()
+            return jsonify({'error': 'Wishlist item not found'}), 404
+        
+        conn.close()
+        return jsonify({'success': True, 'message': 'Removed from wishlist'})
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/wishlist/<int:wishlist_id>', methods=['PUT'])
+def update_wishlist_item(wishlist_id):
+    """Update wishlist item priority or notes"""
+    try:
+        data = request.json
+        priority = data.get('priority')
+        notes = data.get('notes')
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        if priority:
+            cursor.execute("UPDATE wishlist SET priority = ? WHERE wishlist_id = ?", priority, wishlist_id)
+        if notes is not None:
+            cursor.execute("UPDATE wishlist SET notes = ? WHERE wishlist_id = ?", notes, wishlist_id)
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'Wishlist updated'})
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     print("Starting Pokemon Card Collection Manager...")
     print("Visit http://127.0.0.1:5000 in your browser")
